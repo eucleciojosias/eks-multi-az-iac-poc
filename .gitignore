@@ -1,0 +1,26 @@
+# Terraform (note: .terraform.lock.hcl IS committed for reproducible providers)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Variable files with real values (keep the .example)
+*.tfvars
+!*.tfvars.example
+
+# Local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets / env / kubeconfig
+.env
+*.env
+kubeconfig
+kubeconfig-*
+*.pem
+
+# OS / editor
+.DS_Store
