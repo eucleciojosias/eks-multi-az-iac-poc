@@ -52,9 +52,10 @@ the CI/CD principal.
 ## Milestones
 
 Each is a commit ending in a working, verifiable state.
-**Status:** M0 ✅, M5 ✅, M1 (VPC) ✅, M2 (EKS + spot nodes) ✅ **applied** —
-cluster live, 2 nodes Ready across AZs. M3 (add-ons) **written & planned** (6 to
-add, clean) — awaiting your `apply`.
+**Status:** M0 ✅, M1 (VPC) ✅, M2 (EKS + spot nodes) ✅, M3 (add-ons: coredns/
+kube-proxy/vpc-cni + ebs-csi w/ IRSA) ✅, M4 (smoke test — nginx + internet-facing
+ELB, verified 200 OK externally, then torn down) ✅, M5 (remote state) ✅.
+Cluster is **live**. **Remaining: M6 — polish** (README, tflint, security scan, CI).
 
 - **M0 — Scaffolding:** ✅ **done** — root `.gitignore` + `Makefile`; `infra/`
   with `versions.tf` (TF >= 1.9, aws ~> 5.0), `providers.tf`, `variables.tf`.
