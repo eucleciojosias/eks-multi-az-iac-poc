@@ -8,7 +8,7 @@ tear down. Part of a monorepo that will later add `api/` and `frontend/`.
 - **IaC:** Terraform + `terraform-aws-modules/{vpc,eks}`
 - **Network:** 3 AZs, public + private subnets, **single NAT** (cost saving)
 - **Compute:** EKS managed node group, **SPOT**, t3.small, min 1 / desired 2 / max 3
-- **State:** local first, then S3 backend with native locking
+- **State:** local first, then S3 backend with native lockfile (`use_lockfile`, no DynamoDB)
 
 ## Repo structure
 
@@ -19,16 +19,15 @@ eks-multi-az-iac-poc/
 ├── .gitignore                # monorepo-wide (commits the TF lock file)
 ├── Makefile                  # drives infra via `terraform -chdir=infra`
 ├── infra/                    # ← all IaC lives here
-│   ├── README.md             # how to run, screenshots
-│   ├── versions.tf           # pinned providers + terraform version
-│   ├── backend.tf            # S3 backend (added in M5)
-│   ├── providers.tf          # aws + kubernetes/helm
-│   ├── variables.tf
-│   ├── main.tf               # vpc + eks + add-ons
-│   ├── outputs.tf
-│   ├── terraform.tfvars.example
-│   ├── .terraform.lock.hcl   # committed, for reproducible providers
-│   ├── bootstrap/            # tiny root to create the S3 state bucket (M5)
+│   ├── README.md             # how to run, screenshots            (todo M6)
+│   ├── versions.tf           # pinned providers + terraform version  ✅
+│   ├── backend.tf            # S3 remote state, native lockfile       ✅
+│   ├── providers.tf          # aws (kubernetes/helm added in M2/M3)   ✅
+│   ├── variables.tf                                                # ✅
+│   ├── main.tf               # vpc + eks + add-ons               (todo M1+)
+│   ├── outputs.tf            # cluster name/endpoint/region      (todo M1+)
+│   ├── terraform.tfvars.example                                  # ✅
+│   ├── .terraform.lock.hcl   # committed, for reproducible providers  ✅
 │   └── environments/         # (stretch) dev/staging overrides
 ├── api/                      # (future)
 └── frontend/                 # (future)
@@ -44,6 +43,7 @@ Run everything from the repo root via `make` (`init`, `fmt`, `validate`, `plan`,
 ## Milestones
 
 Each is a commit ending in a working, verifiable state.
+**Status:** M0 ✅ and M5 ✅ done. **Next: M1 — VPC** (first real `apply`).
 
 - **M0 — Scaffolding:** ✅ **done** — root `.gitignore` + `Makefile`; `infra/`
   with `versions.tf` (TF >= 1.9, aws ~> 5.0), `providers.tf`, `variables.tf`.
@@ -57,8 +57,10 @@ Each is a commit ending in a working, verifiable state.
   ✅ all pods Running; a test PVC binds.
 - **M4 — Smoke test:** nginx Deployment + Service; confirm reachable. Screenshot,
   then delete.
-- **M5 — Remote state:** S3 bucket via `bootstrap/`, `init -migrate-state`.
-  ✅ state in S3, `plan` clean.
+- **M5 — Remote state:** ✅ **done (early)** — S3 bucket `eks-multi-az-iac-poc-tfstate`
+  created manually (versioned, AES256, BPA on); `backend.tf` uses native lockfile
+  (`use_lockfile`, no DynamoDB). `init` + `plan` clean. State object lands in S3
+  on the first `apply` (M1).
 - **M6 — Polish:** README with diagram + cost note; `tflint` + `trivy config`;
   (stretch) CI running `fmt`/`validate`/`plan` on PRs.
 
