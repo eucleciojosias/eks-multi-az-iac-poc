@@ -21,11 +21,18 @@ It is **scoped least-privilege intent**, not a blank `*:*`:
 
 ## Attach it (run as an admin principal — the limited user can't grant itself)
 
+The policy document uses an `<ACCOUNT_ID>` placeholder (this repo is public — no
+real account ID committed). Substitute your own account ID before creating it:
+
 ```bash
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Inject your account ID into a temp copy
+sed "s/<ACCOUNT_ID>/${ACCOUNT_ID}/g" infra/iam/terraform-provisioner-policy.json > /tmp/tf-policy.json
+
 aws iam create-policy \
   --policy-name eks-multi-az-iac-poc-terraform \
-  --policy-document file://infra/iam/terraform-provisioner-policy.json \
+  --policy-document file:///tmp/tf-policy.json \
   --profile <admin>
 
 aws iam attach-user-policy \
