@@ -19,6 +19,14 @@ module "eks" {
   # OIDC provider for IRSA (pods assume IAM roles without static keys).
   enable_irsa = true
 
+  # Core add-ons managed by EKS (these need no IRSA role; ebs-csi is separate in
+  # addons.tf because it needs one). most_recent picks the latest compatible ver.
+  cluster_addons = {
+    coredns    = { most_recent = true }
+    kube-proxy = { most_recent = true }
+    vpc-cni    = { most_recent = true }
+  }
+
   # Secrets envelope encryption at rest with a dedicated KMS key (module creates
   # + rotates it). The Terraform IAM policy includes a matching kms:* statement.
   create_kms_key            = true

@@ -25,7 +25,8 @@ eks-multi-az-iac-poc/
 │   ├── providers.tf          # aws (kubernetes/helm added in M2/M3)   ✅
 │   ├── variables.tf                                                # ✅
 │   ├── vpc.tf                # VPC module + subnets + NAT             ✅
-│   ├── eks.tf                # eks module + node group + add-ons (todo M2/M3)
+│   ├── eks.tf                # eks module + node group + core add-ons ✅
+│   ├── eks_addons.tf         # ebs-csi driver + IRSA role         (M3, planned)
 │   ├── outputs.tf            # cluster name/endpoint/region           ✅
 │   ├── terraform.tfvars.example                                  # ✅
 │   ├── .terraform.lock.hcl   # committed, for reproducible providers  ✅
@@ -51,9 +52,9 @@ the CI/CD principal.
 ## Milestones
 
 Each is a commit ending in a working, verifiable state.
-**Status:** M0 ✅, M5 ✅ done. M1 (VPC) + M2 (EKS) **written & planned** (55
-resources, `plan` clean, conforms to the scoped IAM policy) — **awaiting your
-`apply`** (nothing applied yet; no state object in S3 until then).
+**Status:** M0 ✅, M5 ✅, M1 (VPC) ✅, M2 (EKS + spot nodes) ✅ **applied** —
+cluster live, 2 nodes Ready across AZs. M3 (add-ons) **written & planned** (6 to
+add, clean) — awaiting your `apply`.
 
 - **M0 — Scaffolding:** ✅ **done** — root `.gitignore` + `Makefile`; `infra/`
   with `versions.tf` (TF >= 1.9, aws ~> 5.0), `providers.tf`, `variables.tf`.
