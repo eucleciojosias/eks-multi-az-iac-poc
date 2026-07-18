@@ -51,7 +51,9 @@ the CI/CD principal.
 ## Milestones
 
 Each is a commit ending in a working, verifiable state.
-**Status:** M0 ✅ and M5 ✅ done. **Next: M1 — VPC** (first real `apply`).
+**Status:** M0 ✅, M5 ✅ done. M1 (VPC) + M2 (EKS) **written & planned** (55
+resources, `plan` clean, conforms to the scoped IAM policy) — **awaiting your
+`apply`** (nothing applied yet; no state object in S3 until then).
 
 - **M0 — Scaffolding:** ✅ **done** — root `.gitignore` + `Makefile`; `infra/`
   with `versions.tf` (TF >= 1.9, aws ~> 5.0), `providers.tf`, `variables.tf`.
