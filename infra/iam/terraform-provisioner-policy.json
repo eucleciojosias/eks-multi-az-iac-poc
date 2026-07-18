@@ -56,6 +56,7 @@
         "ec2:DeleteLaunchTemplate",
         "ec2:CreateLaunchTemplateVersion",
         "ec2:ModifyLaunchTemplate",
+        "ec2:RunInstances",
         "ec2:CreateNetworkAcl",
         "ec2:DeleteNetworkAcl",
         "ec2:CreateNetworkAclEntry",
@@ -129,7 +130,9 @@
         "iam:GetPolicyVersion",
         "iam:CreatePolicyVersion",
         "iam:DeletePolicyVersion",
-        "iam:ListPolicyVersions"
+        "iam:ListPolicyVersions",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
       ],
       "Resource": [
         "arn:aws:iam::<ACCOUNT_ID>:role/eks-multi-az-iac-poc-*",
@@ -178,12 +181,17 @@
       }
     },
     {
+      "Sid": "IamGetServiceLinkedRoles",
+      "Effect": "Allow",
+      "Action": "iam:GetRole",
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/aws-service-role/*"
+    },
+    {
       "Sid": "ControlPlaneLogging",
       "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
         "logs:DeleteLogGroup",
-        "logs:DescribeLogGroups",
         "logs:PutRetentionPolicy",
         "logs:ListTagsForResource",
         "logs:TagResource",
@@ -192,10 +200,17 @@
       "Resource": "arn:aws:logs:*:<ACCOUNT_ID>:log-group:/aws/eks/*"
     },
     {
+      "Sid": "LogsDescribe",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Resource": "*"
+    },
+    {
       "Sid": "KmsForEksSecretsEncryption",
       "Effect": "Allow",
       "Action": [
         "kms:CreateKey",
+        "kms:ListAliases",
         "kms:CreateAlias",
         "kms:UpdateAlias",
         "kms:DeleteAlias",
