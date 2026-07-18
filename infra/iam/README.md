@@ -17,6 +17,7 @@ It is **scoped least-privilege intent**, not a blank `*:*`:
 | `IamOidcForIrsa` | OIDC provider (IRSA) | `oidc-provider/*` |
 | `IamServiceLinkedRoles` | service-linked roles | conditioned to EKS services |
 | `ControlPlaneLogging` | CloudWatch log groups | **only** `/aws/eks/*` |
+| `KmsForEksSecretsEncryption` | create/manage/rotate the KMS key that encrypts EKS secrets | `*` (keys are created dynamically; can't pre-scope by ARN) |
 
 ## Attach it (run as an admin principal — the limited user can't grant itself)
 
@@ -43,9 +44,10 @@ aws ec2 describe-availability-zones --region us-east-1 >/dev/null && echo "ec2 o
 - If a specific `apply` fails on a single missing action (e.g. a new ec2 verb),
   add just that action to the relevant statement — that's the least-privilege
   maintenance loop, and better than falling back to `AdministratorAccess`.
-- **KMS** is intentionally omitted: this POC does not enable EKS envelope
-  encryption of secrets. If you turn that on, add a `kms:*`-scoped statement for
-  the key.
+- **KMS** covers EKS secrets envelope encryption (enabled in `eks.tf` via
+  `create_kms_key = true`). It's `Resource: "*"` because the key doesn't exist
+  when `kms:CreateKey` runs; the remaining actions manage/rotate/schedule-delete
+  that key. To drop encryption, revert `eks.tf` and remove this statement.
 - **CI/CD principal:** attach this same policy to the CI role/user for `apply`.
   For a **plan-only** CI stage, a read-only variant is enough — the `Describe*` /
   `Get*` / `List*` actions here plus S3 `GetObject`/`ListBucket` (drop the
