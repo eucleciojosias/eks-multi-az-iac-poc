@@ -24,10 +24,12 @@ eks-multi-az-iac-poc/
 │   ├── backend.tf            # S3 remote state, native lockfile       ✅
 │   ├── providers.tf          # aws (kubernetes/helm added in M2/M3)   ✅
 │   ├── variables.tf                                                # ✅
-│   ├── main.tf               # vpc + eks + add-ons               (todo M1+)
-│   ├── outputs.tf            # cluster name/endpoint/region      (todo M1+)
+│   ├── vpc.tf                # VPC module + subnets + NAT             ✅
+│   ├── eks.tf                # eks module + node group + add-ons (todo M2/M3)
+│   ├── outputs.tf            # cluster name/endpoint/region           ✅
 │   ├── terraform.tfvars.example                                  # ✅
 │   ├── .terraform.lock.hcl   # committed, for reproducible providers  ✅
+│   ├── iam/                  # Terraform-principal least-priv policy  ✅
 │   └── environments/         # (stretch) dev/staging overrides
 ├── api/                      # (future)
 └── frontend/                 # (future)
@@ -39,6 +41,12 @@ Run everything from the repo root via `make` (`init`, `fmt`, `validate`, `plan`,
 ## Prerequisites
 
 `awscli` v2 (configured), `terraform` >= 1.9, `kubectl`, `helm`.
+
+**Terraform principal permissions:** the IAM user/role running `apply` needs the
+scoped policy in [`infra/iam/terraform-provisioner-policy.json`](infra/iam/terraform-provisioner-policy.json)
+(least-privilege intent, not admin). See [`infra/iam/README.md`](infra/iam/README.md)
+to attach it. The same policy (or a read-only variant for plan-only) is reused for
+the CI/CD principal.
 
 ## Milestones
 
