@@ -26,7 +26,7 @@ jobs:
           terraform_version: latest
 
       - name: terraform fmt
-        run: terraform -chdir=infra fmt -check -recursive
+        run: terraform -chdir=infra fmt -check -diff -recursive
 
       - uses: terraform-linters/setup-tflint@v4
 
