@@ -41,6 +41,12 @@ make destroy   # tear it all down
 > Run `make destroy` when you're done. Delete any `type=LoadBalancer` Services and
 > PVCs first — their ELB/EBS resources aren't managed by Terraform.
 
+## CI
+
+Every push and PR runs `terraform fmt`, `validate`, `tflint`, and a Trivy IaC
+security scan (report-only) — all credential-free, so no AWS secrets are needed.
+See [`.github/workflows/iac-ci.yml`](.github/workflows/iac-ci.yml).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

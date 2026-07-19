@@ -55,7 +55,9 @@ Each is a commit ending in a working, verifiable state.
 **Status:** M0 ✅, M1 (VPC) ✅, M2 (EKS + spot nodes) ✅, M3 (add-ons: coredns/
 kube-proxy/vpc-cni + ebs-csi w/ IRSA) ✅, M4 (smoke test — nginx + internet-facing
 ELB, verified 200 OK externally, then torn down) ✅, M5 (remote state) ✅.
-Cluster is **live**. **Remaining: M6 — polish** (README, tflint, security scan, CI).
+M6 (polish: README, LICENSE, tflint, Trivy scan, CI) ✅. Full lifecycle verified:
+`apply` → working cluster → `destroy` → zero billable resources. Repo scrubbed of
+the AWS account ID (files + history) and ready to publish.
 
 - **M0 — Scaffolding:** ✅ **done** — root `.gitignore` + `Makefile`; `infra/`
   with `versions.tf` (TF >= 1.9, aws ~> 5.0), `providers.tf`, `variables.tf`.

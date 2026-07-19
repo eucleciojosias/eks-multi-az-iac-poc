@@ -1,3 +1,19 @@
+# IAM policies
+
+| File | Attaches to | Purpose |
+|---|---|---|
+| `terraform-provisioner-policy.json` | local operator **and the CI _apply_ role** | Full create/update/delete across VPC, EKS, IAM, KMS, logs + state access |
+| `ci-plan-policy.json` | CI **_plan_** role | Read-only inspection + state lock. No mutating actions |
+| `github-oidc-trust-plan.json` | trust policy of the CI _plan_ role | `sub = repo:OWNER/REPO:pull_request` |
+| `github-oidc-trust-apply.json` | trust policy of the CI _apply_ role | `sub = repo:OWNER/REPO:environment:production` |
+
+**The apply role needs the full provisioner policy** — CI runs `terraform apply`,
+so it must create, update and delete. That policy is proven: it completed a real
+`apply` and a full `destroy`. Do not attach `ci-plan-policy.json` to the apply
+role; it has no mutating permissions and every apply would fail.
+
+---
+
 # IAM for the Terraform principal
 
 `terraform-provisioner-policy.json` is the permission set the principal running
