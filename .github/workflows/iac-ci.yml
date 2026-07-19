@@ -28,12 +28,6 @@ jobs:
       - name: terraform fmt
         run: terraform -chdir=infra fmt -check -recursive
 
-      - name: terraform init (no backend)
-        run: terraform -chdir=infra init -backend=false
-
-      - name: terraform validate
-        run: terraform -chdir=infra validate
-
       - uses: terraform-linters/setup-tflint@v4
 
       - name: tflint
@@ -41,9 +35,8 @@ jobs:
           tflint --chdir=infra --init
           tflint --chdir=infra
 
-      # skip-dirs: `terraform init` above vendors third-party modules into
-      # infra/.terraform/, including their own examples/. Those aren't our code,
-      # so scanning them is noise.
+      # skip-dirs: init vendors third-party modules into infra/.terraform/,
+      # including their own examples/ — not our code, so scanning them is noise.
       - name: Trivy IaC scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -60,9 +53,13 @@ jobs:
           role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: terraform init (with backend)
+      - name: terraform init
         if: env.IS_TRUSTED == 'true'
-        run: terraform -chdir=infra init -reconfigure -input=false
+        run: terraform -chdir=infra init -input=false
+
+      - name: terraform validate
+        if: env.IS_TRUSTED == 'true'
+        run: terraform -chdir=infra validate
 
       - name: terraform plan
         if: env.IS_TRUSTED == 'true'
