@@ -41,6 +41,9 @@ jobs:
           tflint --chdir=infra --init
           tflint --chdir=infra
 
+      # skip-dirs: `terraform init` above vendors third-party modules into
+      # infra/.terraform/, including their own examples/. Those aren't our code,
+      # so scanning them is noise.
       - name: Trivy IaC scan
         uses: aquasecurity/trivy-action@master
         with:
@@ -48,6 +51,7 @@ jobs:
           scan-ref: infra
           severity: HIGH,CRITICAL
           exit-code: '0'
+          skip-dirs: '**/.terraform'
 
       - name: Configure AWS credentials (OIDC)
         if: env.IS_TRUSTED == 'true'
