@@ -1,0 +1,64 @@
+name: Terraform plan (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment root under infra/envs/ to plan
+        type: string
+        required: true
+      upload-plan:
+        description: Upload the plan as an artifact for a gated apply
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  plan:
+    name: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    # Needed for this env's vars/secrets (TF_VAR_*)
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write # mint the OIDC token for AWS
+    env:
+      TF_ROOT: infra/envs/${{ inputs.environment }}
+      TF_VAR_cluster_endpoint_public_access_cidrs: ${{ vars.TF_VAR_CLUSTER_ENDPOINT_PUBLIC_ACCESS_CIDRS }}
+      # Credentials are only issued for code we trust: our own branches and
+      # manual dispatches, never a forked PR.
+      IS_TRUSTED: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/tf-setup
+        with:
+          tflint: 'true'
+          aws-role-arn: ${{ env.IS_TRUSTED == 'true' && vars.AWS_PLAN_ROLE_ARN || '' }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: tflint
+        run: |
+          tflint --chdir=${TF_ROOT} --config=${GITHUB_WORKSPACE}/.tflint.hcl --init
+          tflint --chdir=${TF_ROOT} --config=${GITHUB_WORKSPACE}/.tflint.hcl
+
+      - name: terraform init
+        if: env.IS_TRUSTED == 'true'
+        run: terraform -chdir=${TF_ROOT} init -input=false
+
+      - name: terraform validate
+        if: env.IS_TRUSTED == 'true'
+        run: terraform -chdir=${TF_ROOT} validate
+
+      - name: terraform plan
+        if: env.IS_TRUSTED == 'true'
+        run: terraform -chdir=${TF_ROOT} plan -out=tfplan -input=false -no-color
+
+      # WARNING: on a PUBLIC repo, workflow artifacts are downloadable by anyone.
+      - name: Upload plan artifact
+        if: inputs.upload-plan && env.IS_TRUSTED == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ inputs.environment }}
+          path: ${{ env.TF_ROOT }}/tfplan
+          retention-days: 1

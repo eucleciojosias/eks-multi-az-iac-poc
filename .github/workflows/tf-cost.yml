@@ -1,0 +1,56 @@
+name: Terraform cost diff (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment root under infra/envs/ to price
+        type: string
+        required: true
+    secrets:
+      INFRACOST_API_KEY:
+        required: true
+
+jobs:
+  cost:
+    name: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      TF_ROOT: infra/envs/${{ inputs.environment }}
+    steps:
+      - uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Cost snapshot of base branch
+        run: |
+          infracost breakdown --path=${TF_ROOT} \
+            --format=json \
+            --out-file=/tmp/infracost-base.json
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+
+      - name: Cost diff vs base
+        run: |
+          infracost diff --path=${TF_ROOT} \
+            --compare-to=/tmp/infracost-base.json \
+            --format=json \
+            --out-file=/tmp/infracost.json
+
+      - name: Post diff as a PR comment
+        run: |
+          infracost comment github --path=/tmp/infracost.json \
+            --repo=$GITHUB_REPOSITORY \
+            --github-token=${{ github.token }} \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --behavior=update \
+            --tag=${{ inputs.environment }}

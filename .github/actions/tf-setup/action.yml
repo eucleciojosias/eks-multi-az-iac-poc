@@ -1,0 +1,42 @@
+name: Terraform setup
+description: >
+  Install Terraform (and optionally tflint), then optionally assume an AWS role
+  via OIDC. The preamble shared by every Terraform job.
+
+inputs:
+  terraform-version:
+    description: Terraform version for hashicorp/setup-terraform
+    required: false
+    default: latest
+  tflint:
+    description: Install tflint as well ('true' to enable)
+    required: false
+    default: 'false'
+  aws-role-arn:
+    description: >
+      Role to assume via OIDC. Leave empty to skip credentials entirely — that
+      is what keeps untrusted (forked-PR) runs credential-free.
+    required: false
+    default: ''
+  aws-region:
+    description: AWS region for the assumed session
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+
+    - if: inputs.tflint == 'true'
+      uses: terraform-linters/setup-tflint@v4
+
+    # Skipped when aws-role-arn is empty, so a single call site covers both the
+    # trusted and untrusted paths without duplicating steps.
+    - if: inputs.aws-role-arn != ''
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws-role-arn }}
+        aws-region: ${{ inputs.aws-region }}
