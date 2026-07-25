@@ -28,9 +28,14 @@ infra/
         ├── providers.tf    # the only place a provider is configured
         └── main.tf         # module "platform" + this env's values
 infra/iam/                  # provisioner + CI role policies (templated)
+.github/
+├── workflows/iac-ci.yml    # orchestration only
+├── workflows/tf-plan.yml   # reusable: lint/validate/plan one env
+├── workflows/tf-cost.yml   # reusable: infracost diff for one env
+├── actions/tf-setup/       # terraform + tflint + OIDC preamble
+└── scripts/affected-envs.sh # which envs a change actually touches
 .tflint.hcl                 # lint rules, shared by every env
 Makefile                    # targets take ENV=<name>
-plan.md                     # build plan and milestones
 ```
 
 ## Usage
@@ -74,15 +79,40 @@ make plan ENV=staging # target a specific env
 
 ## CI
 
-Every push and PR runs `terraform fmt` (recursive, so the shared module is covered
-too), `tflint`, and a Trivy IaC scan (report-only) — all credential-free, so no AWS
-secrets are needed. `init`/`validate`/`plan` then run against the environment root
-using OIDC-federated credentials, but only on trusted refs (never a forked PR).
+[`iac-ci.yml`](.github/workflows/iac-ci.yml) is orchestration only — each stage is a
+reusable workflow or a composite action, so adding an environment costs no pipeline
+code.
 
-`apply` is manual-dispatch only and gated behind a GitHub Environment with required
-reviewers; it consumes the exact plan artifact that was approved. The dispatch takes
-an `environment` input selecting which `infra/envs/<name>` root to target.
-See [`.github/workflows/iac-ci.yml`](.github/workflows/iac-ci.yml).
+**1. Detect affected environments.** [`affected-envs.sh`](.github/scripts/affected-envs.sh)
+diffs the changed paths against `infra/envs/<name>/` and emits a JSON matrix, so a
+change to one env never spends CI minutes planning the others. A dispatch just uses
+its `environment` input. The resolved list is echoed into the job log, so you can see
+which envs a run picked up without digging into the step outputs. If nothing under
+`infra/envs/` changed, the plan and cost stages are skipped entirely.
+
+**2. Format & scan.** `terraform fmt` (recursive, so the shared module is covered
+too), `tflint`, and a Trivy IaC scan (report-only). All credential-free — no AWS
+secrets needed, so it runs on forked PRs too.
+
+**3. Plan, one job per affected env** ([`tf-plan.yml`](.github/workflows/tf-plan.yml)),
+fanned out in parallel with `fail-fast: false` so one env's failure doesn't hide
+another's plan. `init`/`validate`/`plan` use OIDC-federated credentials — never a
+long-lived key — and only on trusted refs; a forked PR still gets linted but is never
+issued credentials.
+
+**4. Cost diff** ([`tf-cost.yml`](.github/workflows/tf-cost.yml)) posts an Infracost
+diff on same-repo PRs, which is why the workflow grants `pull-requests: write`
+alongside the `id-token: write` that OIDC needs.
+
+**5. Apply** is manual-dispatch only — merging never deploys. It's gated behind a
+separate `<env>-apply` GitHub Environment with required reviewers, and consumes the
+exact plan artifact that was approved. A `concurrency` group keeps applies from
+racing per environment.
+
+Each environment's `TF_VAR_*` values come from its GitHub Environment variables, and
+the plan/apply role ARNs (`AWS_PLAN_ROLE_ARN` / `AWS_APPLY_ROLE_ARN`) are scoped the
+same way. See [`infra/iam/README.md`](infra/iam/README.md) for the two CI roles and
+their trust policies.
 
 ## License
 
