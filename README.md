@@ -21,6 +21,7 @@ instantiates it with its own values and its own isolated state. Adding
 
 ```
 infra/
+├── Makefile                # targets take ENV=<name>
 ├── modules/eks-platform/   # the reusable composite: VPC + EKS + add-ons
 └── envs/
     └── staging/            # one Terraform root per environment
@@ -35,7 +36,6 @@ infra/iam/                  # provisioner + CI role policies (templated)
 ├── actions/tf-setup/       # terraform + tflint + OIDC preamble
 └── scripts/affected-envs.sh # which envs a change actually touches
 .tflint.hcl                 # lint rules, shared by every env
-Makefile                    # targets take ENV=<name>
 ```
 
 ## Usage
@@ -57,9 +57,12 @@ curl -s https://checkip.amazonaws.com          # your IP, to put in it
 CI doesn't use that file — it injects `TF_VAR_cluster_endpoint_public_access_cidrs`
 from the GitHub Environment's variables, so no real IP is ever committed.
 
-Every target takes `ENV=<name>` and defaults to `staging`:
+Every target lives in [`infra/Makefile`](infra/Makefile), takes `ENV=<name>`, and
+defaults to `staging`:
 
 ```bash
+cd infra
+
 make init             # terraform init
 make plan             # preview changes
 make apply            # provision everything
@@ -74,7 +77,7 @@ make plan ENV=staging # target a specific env
 ```
 
 > **Cost:** the EKS control plane and NAT gateway bill hourly even at zero nodes.
-> Run `make destroy` when you're done. Delete any `type=LoadBalancer` Services and
+> Run `make destroy` (from `infra/`) when you're done. Delete any `type=LoadBalancer` Services and
 > PVCs first — their ELB/EBS resources aren't managed by Terraform.
 
 ## CI

@@ -1,19 +1,19 @@
 ENV  ?= staging
-ROOT := infra/envs/$(ENV)
+ROOT := envs/$(ENV)
 
-INFRA        := infra
-TFLINT_CONFIG := $(CURDIR)/.tflint.hcl
+INFRA         := .
+TFLINT_CONFIG := $(CURDIR)/../.tflint.hcl
 
 .PHONY: help envs init fmt fmt-check validate lint plan plan-out apply destroy output update-kubeconfig
 
 ifeq ($(wildcard $(ROOT)/.),)
-$(error ENV="$(ENV)" has no root at $(ROOT). Available: $(notdir $(wildcard infra/envs/*)))
+$(error ENV="$(ENV)" has no root at $(ROOT). Available: $(notdir $(wildcard envs/*)))
 endif
 
 help:
 	@echo "Targets (all take ENV=<name>, default staging):"
 	@echo "  init               terraform init for the selected env"
-	@echo "  fmt                format every .tf under $(INFRA)/ (recursive)"
+	@echo "  fmt                format every .tf file, recursive"
 	@echo "  fmt-check          fail if anything is unformatted (what CI runs)"
 	@echo "  validate           terraform validate for the selected env"
 	@echo "  lint               tflint against the selected env root"
@@ -24,10 +24,10 @@ help:
 	@echo "  output             show this env's outputs"
 	@echo "  update-kubeconfig  point kubectl at this env's cluster"
 	@echo
-	@echo "Environments: $(notdir $(wildcard infra/envs/*))"
+	@echo "Environments: $(notdir $(wildcard envs/*))"
 
 envs:
-	@echo $(notdir $(wildcard infra/envs/*))
+	@echo $(notdir $(wildcard envs/*))
 
 init:
 	terraform -chdir=$(ROOT) init
