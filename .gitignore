@@ -22,5 +22,11 @@ kubeconfig
 kubeconfig-*
 *.pem
 
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ruff_cache/
+
 # OS / editor
 .DS_Store
