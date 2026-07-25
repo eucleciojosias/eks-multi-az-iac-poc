@@ -1,27 +1,66 @@
-INFRA := infra
+ENV  ?= staging
+ROOT := infra/envs/$(ENV)
 
-.PHONY: init fmt validate plan apply destroy kubeconfig
+INFRA        := infra
+TFLINT_CONFIG := $(CURDIR)/.tflint.hcl
+
+.PHONY: help envs init fmt fmt-check validate lint plan plan-out apply destroy output update-kubeconfig
+
+ifeq ($(wildcard $(ROOT)/.),)
+$(error ENV="$(ENV)" has no root at $(ROOT). Available: $(notdir $(wildcard infra/envs/*)))
+endif
+
+help:
+	@echo "Targets (all take ENV=<name>, default staging):"
+	@echo "  init               terraform init for the selected env"
+	@echo "  fmt                format every .tf under $(INFRA)/ (recursive)"
+	@echo "  fmt-check          fail if anything is unformatted (what CI runs)"
+	@echo "  validate           terraform validate for the selected env"
+	@echo "  lint               tflint against the selected env root"
+	@echo "  plan               preview changes"
+	@echo "  plan-out           plan saved to $(ROOT)/tfplan (the artifact CI approves)"
+	@echo "  apply              provision (prompts for confirmation)"
+	@echo "  destroy            tear down"
+	@echo "  output             show this env's outputs"
+	@echo "  update-kubeconfig  point kubectl at this env's cluster"
+	@echo
+	@echo "Environments: $(notdir $(wildcard infra/envs/*))"
+
+envs:
+	@echo $(notdir $(wildcard infra/envs/*))
 
 init:
-	terraform -chdir=$(INFRA) init
+	terraform -chdir=$(ROOT) init
 
 fmt:
 	terraform -chdir=$(INFRA) fmt -recursive
 
+fmt-check:
+	terraform -chdir=$(INFRA) fmt -check -diff -recursive
+
 validate:
-	terraform -chdir=$(INFRA) validate
+	terraform -chdir=$(ROOT) validate
+
+lint:
+	tflint --chdir=$(ROOT) --config=$(TFLINT_CONFIG) --init
+	tflint --chdir=$(ROOT) --config=$(TFLINT_CONFIG)
 
 plan:
-	terraform -chdir=$(INFRA) plan
+	terraform -chdir=$(ROOT) plan
+
+plan-out:
+	terraform -chdir=$(ROOT) plan -out=tfplan -input=false
 
 apply:
-	terraform -chdir=$(INFRA) apply
+	terraform -chdir=$(ROOT) apply
 
 destroy:
-	terraform -chdir=$(INFRA) destroy
+	terraform -chdir=$(ROOT) destroy
 
-# Write kubeconfig for the cluster (available after M2).
-kubeconfig:
+output:
+	terraform -chdir=$(ROOT) output
+
+update-kubeconfig:
 	aws eks update-kubeconfig \
-		--region $$(terraform -chdir=$(INFRA) output -raw region) \
-		--name $$(terraform -chdir=$(INFRA) output -raw cluster_name)
+		--region $$(terraform -chdir=$(ROOT) output -raw region) \
+		--name $$(terraform -chdir=$(ROOT) output -raw cluster_name)

@@ -36,8 +36,9 @@ eks-multi-az-iac-poc/
 └── frontend/                 # (future)
 ```
 
-Run everything from the repo root via `make` (`init`, `fmt`, `validate`, `plan`,
-`apply`, `destroy`, `kubeconfig`); each target wraps `terraform -chdir=infra`.
+Run everything from the repo root via `make` (`init`, `fmt`, `validate`, `lint`,
+`plan`, `apply`, `destroy`, `output`, `update-kubeconfig`); each target takes
+`ENV=<name>` (default `staging`) and wraps `terraform -chdir=infra/envs/$(ENV)`.
 
 ## Prerequisites
 
