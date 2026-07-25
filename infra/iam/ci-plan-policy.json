@@ -32,13 +32,13 @@
       "Sid": "StateRead",
       "Effect": "Allow",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::<PROJECT>-tfstate/<PROJECT>/infra.tfstate"
+      "Resource": "arn:aws:s3:::<PROJECT>-tfstate/*/terraform.tfstate"
     },
     {
       "Sid": "StateLockOnly",
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::<PROJECT>-tfstate/<PROJECT>/infra.tfstate.tflock"
+      "Resource": "arn:aws:s3:::<PROJECT>-tfstate/*/terraform.tfstate.tflock"
     }
   ]
 }
