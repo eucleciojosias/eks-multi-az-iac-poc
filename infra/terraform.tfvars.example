@@ -1,3 +1,0 @@
-# Copy to terraform.tfvars and adjust. terraform.tfvars is gitignored.
-project = "eks-multi-az-iac-poc"
-region  = "us-east-1"

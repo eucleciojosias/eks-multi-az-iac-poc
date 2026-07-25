@@ -2,7 +2,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_name    = var.cluster_name
+  cluster_name    = local.name
   cluster_version = var.cluster_version
 
   # API endpoint: public + private. Auth is always required; restrict the public
@@ -43,10 +43,10 @@ module "eks" {
 
   eks_managed_node_groups = {
     default = {
-      # Keep the node IAM role within the eks-multi-az-iac-poc-* prefix so the
-      # scoped Terraform IAM policy is allowed to create it (module default
-      # would be "default-eks-node-group-*", which the policy denies).
-      iam_role_name            = "${var.cluster_name}-node"
+      # Keep the node IAM role within the <project>-* prefix so the scoped
+      # Terraform IAM policy is allowed to create it (module default would be
+      # "default-eks-node-group-*", which the policy denies).
+      iam_role_name            = "${local.name}-node"
       iam_role_use_name_prefix = true
 
       min_size     = var.node_min_size
@@ -54,13 +54,14 @@ module "eks" {
       desired_size = var.node_desired_size
 
       instance_types = var.node_instance_types
-      capacity_type  = "SPOT" # cost lever; interruptible, fine for a POC
+      capacity_type  = var.node_capacity_type
 
       disk_size = var.node_disk_size
     }
   }
 
   tags = {
-    Project = var.project
+    Project     = var.project
+    Environment = var.environment
   }
 }

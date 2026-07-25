@@ -1,19 +1,12 @@
 variable "project" {
-  description = "Project name, used for tagging and resource naming."
+  description = "Project name. Prefixes every resource; MUST stay within the Terraform IAM policy's role/policy prefix."
   type        = string
   default     = "eks-multi-az-iac-poc"
 }
 
-variable "region" {
-  description = "AWS region to deploy into."
+variable "environment" {
+  description = "Environment name (e.g. staging, production). Combined with project into the cluster name and state prefix."
   type        = string
-  default     = "us-east-1"
-}
-
-variable "cluster_name" {
-  description = "EKS cluster name; also used for k8s subnet ownership tags."
-  type        = string
-  default     = "eks-multi-az-iac-poc"
 }
 
 variable "vpc_cidr" {
@@ -25,7 +18,7 @@ variable "vpc_cidr" {
 variable "az_count" {
   description = "Number of Availability Zones to spread subnets across."
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "cluster_version" {
@@ -38,6 +31,17 @@ variable "node_instance_types" {
   description = "Instance types for the managed node group (spot picks the cheapest available)."
   type        = list(string)
   default     = ["t3.small", "t3.medium"]
+}
+
+variable "node_capacity_type" {
+  description = "SPOT (interruptible, cheap) or ON_DEMAND (stable). Production posture is ON_DEMAND."
+  type        = string
+  default     = "ON_DEMAND"
+
+  validation {
+    condition     = contains(["SPOT", "ON_DEMAND"], var.node_capacity_type)
+    error_message = "node_capacity_type must be SPOT or ON_DEMAND."
+  }
 }
 
 variable "node_min_size" {
@@ -55,7 +59,7 @@ variable "node_desired_size" {
 variable "node_max_size" {
   description = "Maximum nodes in the managed node group."
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "node_disk_size" {

@@ -14,7 +14,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
-  name = "${var.project}-vpc"
+  name = "${local.name}-vpc"
   cidr = var.vpc_cidr
 
   azs             = local.azs
@@ -31,12 +31,12 @@ module "vpc" {
   # Subnet tags EKS / the AWS Load Balancer Controller use for auto-discovery:
   # public subnets host internet-facing LBs, private subnets host internal LBs.
   public_subnet_tags = {
-    "kubernetes.io/role/elb"                    = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"              = "1"
+    "kubernetes.io/cluster/${local.name}" = "shared"
   }
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"           = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"     = "1"
+    "kubernetes.io/cluster/${local.name}" = "shared"
   }
 }

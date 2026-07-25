@@ -1,11 +1,11 @@
 output "region" {
   description = "AWS region the infra is deployed in."
-  value       = var.region
+  value       = data.aws_region.current.name
 }
 
 output "cluster_name" {
-  description = "EKS cluster name (used by `make kubeconfig`)."
-  value       = var.cluster_name
+  description = "EKS cluster name (used by `make update-kubeconfig`)."
+  value       = module.eks.cluster_name
 }
 
 output "vpc_id" {
