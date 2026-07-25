@@ -39,6 +39,19 @@ Prerequisites: `awscli` v2, `terraform >= 1.11`, `kubectl`, `helm`, and an AWS
 account. See [`infra/iam/README.md`](infra/iam/README.md) for the IAM policy the
 Terraform principal needs.
 
+First, set the CIDRs allowed to reach the EKS API endpoint. This is required and
+has no default — an unset value fails the plan rather than quietly leaving the
+endpoint open to the internet:
+
+```bash
+cd infra/envs/staging
+cp terraform.tfvars.example terraform.tfvars   # gitignored
+curl -s https://checkip.amazonaws.com          # your IP, to put in it
+```
+
+CI doesn't use that file — it injects `TF_VAR_cluster_endpoint_public_access_cidrs`
+from the GitHub Environment's variables, so no real IP is ever committed.
+
 Every target takes `ENV=<name>` and defaults to `staging`:
 
 ```bash

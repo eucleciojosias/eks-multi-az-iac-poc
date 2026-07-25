@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and set your own value. terraform.tfvars is
+# gitignored, so the real CIDR never reaches the repo.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Find your current public IP:  curl -s https://checkip.amazonaws.com
+# CI does not use this file — it injects TF_VAR_* from the GitHub Environment.
+
+cluster_endpoint_public_access_cidrs = ["203.0.113.4/32"] # <- your IP/32
