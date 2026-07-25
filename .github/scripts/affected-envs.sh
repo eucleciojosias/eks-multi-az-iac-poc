@@ -23,4 +23,10 @@ json=$(printf '%s' "$envs" | jq -Rsc 'split("\n") | map(select(length > 0))')
 
 out="${GITHUB_OUTPUT:-/dev/stdout}"
 echo "envs=$json" >>"$out"
-[ "$(jq length <<<"$json")" -gt 0 ] && echo "any=true" >>"$out" || echo "any=false" >>"$out"
+
+if [ "$(jq length <<<"$json")" -gt 0 ]; then
+  echo "any=true" >>"$out"
+  echo "$json" | jq
+else
+  echo "any=false" >>"$out"
+fi
