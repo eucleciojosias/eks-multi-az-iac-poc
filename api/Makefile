@@ -9,7 +9,6 @@ help:
 	@echo "  lint    ruff check"
 	@echo "  fmt     ruff format"
 	@echo "  psql    open a psql shell against the running postgres service"
-	@echo "  seed    fetch movies from OMDb into the running api (scripts/, isolated deps)"
 
 up:
 	docker compose up --build
@@ -31,6 +30,3 @@ fmt:
 
 psql:
 	docker compose exec postgres psql -U movies -d movies
-
-seed:
-	uv run --project scripts scripts/seed_movies.py
