@@ -24,7 +24,7 @@ variable "az_count" {
 variable "cluster_version" {
   description = "EKS control-plane version"
   type        = string
-  default     = "1.33"
+  default     = "1.36"
 }
 
 variable "node_instance_types" {
