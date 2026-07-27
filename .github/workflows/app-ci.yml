@@ -94,6 +94,7 @@ jobs:
     env:
       AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
       AWS_REGION: ${{ vars.AWS_REGION }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -103,27 +104,41 @@ jobs:
           role-to-assume: ${{ vars.AWS_APP_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Check the staging cluster exists
+        id: cluster
+        run: |
+          if out=$(aws eks describe-cluster --name "$EKS_CLUSTER_NAME" \
+                     --query 'cluster.status' --output text 2>&1); then
+            echo "Cluster status: $out"
+            [ "$out" = "ACTIVE" ] && echo "deploy=true" >>"$GITHUB_OUTPUT" \
+              || echo "::notice::skipping deploy — cluster is $out, not ACTIVE"
+          else
+            echo "::notice::skipping deploy — $out"
+          fi
+
       - uses: azure/setup-kubectl@v4
+        if: steps.cluster.outputs.deploy == 'true'
         with:
           version: v1.33.0
 
       - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --name "${{ vars.EKS_CLUSTER_NAME }}" \
-            --region "${{ vars.AWS_REGION }}"
+        if: steps.cluster.outputs.deploy == 'true'
+        run: aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME"
 
       - name: Render manifests
+        if: steps.cluster.outputs.deploy == 'true'
         run: |
           export IMAGE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA::7}"
           yq -i '(.. | select(. == "<IMAGE>")) = strenv(IMAGE)' k8s/movies-api.yaml
 
       - name: Deploy NGINX
+        if: steps.cluster.outputs.deploy == 'true'
         run: |
             kubectl apply -f k8s/nginx.yaml
             kubectl rollout status deployment/nginx --timeout=5m
 
       - name: Deploy movies-api
+        if: steps.cluster.outputs.deploy == 'true'
         run: |
             kubectl apply -f k8s/movies-api.yaml
             kubectl rollout status deployment/movies-api --timeout=5m

@@ -11,8 +11,9 @@ on:
       environment:
         description: Environment root under infra/envs/ to plan and apply
         type: choice
-        default: staging
+        default: common
         options:
+          - common
           - staging
   pull_request:
     paths:
