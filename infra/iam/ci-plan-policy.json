@@ -18,7 +18,11 @@
         "kms:ListAliases",
         "kms:ListResourceTags",
         "elasticloadbalancing:Describe*",
-        "autoscaling:Describe*"
+        "autoscaling:Describe*",
+        "ecr:DescribeRepositories",
+        "ecr:ListTagsForResource",
+        "ecr:GetLifecyclePolicy",
+        "ecr:GetRepositoryPolicy"
       ],
       "Resource": "*"
     },
