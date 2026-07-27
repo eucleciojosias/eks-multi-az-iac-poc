@@ -14,9 +14,15 @@ spec:
       containers:
       - name: nginx
         image: nginx:latest
-        resources:
         ports:
         - containerPort: 80
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
 ---
 apiVersion: v1
 kind: Service
