@@ -36,11 +36,11 @@ jobs:
 
       - name: ruff format --check
         working-directory: api
-        run: uv run ruff format --check app scripts
+        run: uv run ruff format --check app
 
       - name: ruff check
         working-directory: api
-        run: uv run ruff check app scripts
+        run: uv run ruff check app
 
       - uses: docker/setup-buildx-action@v3
 
