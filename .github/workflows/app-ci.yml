@@ -3,6 +3,8 @@ name: App CI/CD
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'api/**'
       - 'k8s/**'
@@ -129,7 +131,7 @@ jobs:
         if: steps.cluster.outputs.deploy == 'true'
         run: |
           export IMAGE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA::7}"
-          yq -i '(.. | select(. == "<IMAGE>")) = strenv(IMAGE)' k8s/movies-api.yaml
+          yq -i '(.. | select(. == "<IMAGE>")) = strenv(IMAGE)' k8s-manifests/movies-api.yaml
 
       - name: Deploy NGINX
         if: steps.cluster.outputs.deploy == 'true'
