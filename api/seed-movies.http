@@ -1,0 +1,172 @@
+@baseUrl = http://localhost:8000
+
+### The Matrix
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "The Matrix",
+  "cast": [
+    "Keanu Reeves",
+    "Laurence Fishburne",
+    "Carrie-Anne Moss"
+  ],
+  "synopsis": "When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth--the life he knows is the elaborate deception of an evil cyber-intelligence."
+}
+
+### Inception
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Inception",
+  "cast": [
+    "Leonardo DiCaprio",
+    "Joseph Gordon-Levitt",
+    "Elliot Page"
+  ],
+  "synopsis": "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO, but his tragic past may doom the project and his team to disaster."
+}
+
+### The Godfather
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "The Godfather",
+  "cast": [
+    "Marlon Brando",
+    "Al Pacino",
+    "James Caan"
+  ],
+  "synopsis": "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son."
+}
+
+### Pulp Fiction
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Pulp Fiction",
+  "cast": [
+    "John Travolta",
+    "Uma Thurman",
+    "Samuel L. Jackson"
+  ],
+  "synopsis": "The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption."
+}
+
+### The Shawshank Redemption
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "The Shawshank Redemption",
+  "cast": [
+    "Tim Robbins",
+    "Morgan Freeman",
+    "Bob Gunton"
+  ],
+  "synopsis": "A wrongfully convicted banker forms a close friendship with a hardened convict over a quarter century while retaining his humanity through simple acts of compassion."
+}
+
+### Interstellar
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Interstellar",
+  "cast": [
+    "Matthew McConaughey",
+    "Anne Hathaway",
+    "Jessica Chastain"
+  ],
+  "synopsis": "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans."
+}
+
+### Fight Club
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Fight Club",
+  "cast": [
+    "Brad Pitt",
+    "Edward Norton",
+    "Meat Loaf"
+  ],
+  "synopsis": "An insomniac office worker and a devil-may-care soap maker form an underground fight club that evolves into much more."
+}
+
+### The Dark Knight
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "The Dark Knight",
+  "cast": [
+    "Christian Bale",
+    "Heath Ledger",
+    "Aaron Eckhart"
+  ],
+  "synopsis": "When a menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman, James Gordon and Harvey Dent must work together to put an end to the madness."
+}
+
+### Forrest Gump
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Forrest Gump",
+  "cast": [
+    "Tom Hanks",
+    "Robin Wright",
+    "Gary Sinise"
+  ],
+  "synopsis": "The history of the United States from the 1950s to the '70s unfolds from the perspective of an Alabama man with an IQ of 75, who yearns to be reunited with his childhood sweetheart."
+}
+
+### Parasite
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Parasite",
+  "cast": [
+    "Song Kang-ho",
+    "Lee Sun-kyun",
+    "Cho Yeo-jeong"
+  ],
+  "synopsis": "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan."
+}
+
+### Spirited Away
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "Spirited Away",
+  "cast": [
+    "Miyu Irino",
+    "Rumi Hiiragi",
+    "Mari Natsuki"
+  ],
+  "synopsis": "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches and spirits, and where humans are changed into beasts."
+}
+
+### The Lord of the Rings: The Fellowship of the Ring
+POST {{baseUrl}}/movies
+Content-Type: application/json
+
+{
+  "name": "The Lord of the Rings: The Fellowship of the Ring",
+  "cast": [
+    "Elijah Wood",
+    "Ian McKellen",
+    "Orlando Bloom"
+  ],
+  "synopsis": "A meek Hobbit from the Shire and eight companions set out on a journey to destroy the powerful One Ring and save Middle-earth from the Dark Lord Sauron."
+}
+
+### list
+GET {{baseUrl}}/movies?limit=100
