@@ -1,11 +1,11 @@
 variable "project" {
-  description = "Project name. Prefixes every resource; MUST stay within the Terraform IAM policy's role/policy prefix."
+  description = "Project name."
   type        = string
   default     = "eks-multi-az-iac-poc"
 }
 
 variable "environment" {
-  description = "Environment name (e.g. staging, production). Combined with project into the cluster name and state prefix."
+  description = "Environment name"
   type        = string
 }
 
@@ -22,19 +22,19 @@ variable "az_count" {
 }
 
 variable "cluster_version" {
-  description = "EKS control-plane version (1.29-1.33 currently supported). Verify with `aws eks describe-cluster-versions`."
+  description = "EKS control-plane version"
   type        = string
   default     = "1.33"
 }
 
 variable "node_instance_types" {
-  description = "Instance types for the managed node group (spot picks the cheapest available)."
+  description = "Instance types for the managed node group."
   type        = list(string)
-  default     = ["t3.small", "t3.medium"]
+  default     = ["t3.micro"]
 }
 
 variable "node_capacity_type" {
-  description = "SPOT (interruptible, cheap) or ON_DEMAND (stable). Production posture is ON_DEMAND."
+  description = "SPOT (interruptible, cheap) or ON_DEMAND (stable)."
   type        = string
   default     = "ON_DEMAND"
 
@@ -68,8 +68,20 @@ variable "node_disk_size" {
   default     = 20
 }
 
+variable "app_deploy_role_arns" {
+  description = "IAM roles the app CD pipeline (app-ci.yml) assumes."
+  type        = map(string)
+  default     = {}
+}
+
+variable "app_namespace" {
+  description = "Namespace the app CD pipeline may edit."
+  type        = string
+  default     = "default"
+}
+
 variable "cluster_endpoint_public_access_cidrs" {
-  description = "CIDRs allowed to reach the public API endpoint. Lock to your IP/32 for real use; 0.0.0.0/0 is open to the internet (auth still required)."
+  description = "CIDRs allowed to reach the public API endpoint."
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }

@@ -25,6 +25,7 @@ jobs:
     env:
       TF_ROOT: infra/envs/${{ inputs.environment }}
       TF_VAR_cluster_endpoint_public_access_cidrs: ${{ vars.TF_VAR_CLUSTER_ENDPOINT_PUBLIC_ACCESS_CIDRS }}
+      TF_VAR_app_deploy_role_arn: ${{ vars.AWS_APP_DEPLOY_ROLE_ARN }}
       # Credentials are only issued for code we trust: our own branches and
       # manual dispatches, never a forked PR.
       IS_TRUSTED: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
