@@ -5,7 +5,7 @@ module "platform" {
   environment = "staging"
 
   node_capacity_type  = "SPOT"
-  node_instance_types = ["t3.small"]
+  node_instance_types = ["t3.medium"]
   node_desired_size   = 2
 
   cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
