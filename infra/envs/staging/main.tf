@@ -10,7 +10,5 @@ module "platform" {
 
   cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
 
-  # CI passes an unset Actions variable through as "", not null, so both count
-  # as "no app pipeline yet" — otherwise the access entry gets an empty ARN.
   app_deploy_role_arns = var.app_deploy_role_arn == null || var.app_deploy_role_arn == "" ? {} : { app_cd = var.app_deploy_role_arn }
 }

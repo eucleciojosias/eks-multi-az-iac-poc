@@ -134,11 +134,11 @@ jobs:
       - name: Deploy NGINX
         if: steps.cluster.outputs.deploy == 'true'
         run: |
-            kubectl apply -f k8s/nginx.yaml
+            kubectl apply -f k8s-manifests/nginx.yaml
             kubectl rollout status deployment/nginx --timeout=5m
 
       - name: Deploy movies-api
         if: steps.cluster.outputs.deploy == 'true'
         run: |
-            kubectl apply -f k8s/movies-api.yaml
+            kubectl apply -f k8s-manifests/movies-api.yaml
             kubectl rollout status deployment/movies-api --timeout=5m
