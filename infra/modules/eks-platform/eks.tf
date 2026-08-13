@@ -86,6 +86,45 @@ resource "aws_eks_access_entry" "app_deploy" {
   tags = local.tags
 }
 
+locals {
+  # Same shape for both tiers, so the entry and the association can each be one
+  # resource instead of two.
+  cluster_access = merge(
+    { for k, arn in var.cluster_admin_principal_arns : k => {
+      principal_arn = arn
+      policy        = "AmazonEKSClusterAdminPolicy"
+    } },
+    { for k, arn in var.cluster_viewer_principal_arns : k => {
+      principal_arn = arn
+      policy        = "AmazonEKSAdminViewPolicy"
+    } },
+  )
+}
+
+resource "aws_eks_access_entry" "cluster_access" {
+  for_each = local.cluster_access
+
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = each.value.principal_arn
+  type          = "STANDARD"
+
+  tags = local.tags
+}
+
+resource "aws_eks_access_policy_association" "cluster_access" {
+  for_each = local.cluster_access
+
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = each.value.principal_arn
+  policy_arn    = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/${each.value.policy}"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.cluster_access]
+}
+
 resource "aws_eks_access_policy_association" "app_deploy" {
   for_each = var.app_deploy_role_arns
 

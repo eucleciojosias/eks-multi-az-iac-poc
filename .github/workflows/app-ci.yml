@@ -133,12 +133,6 @@ jobs:
           export IMAGE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA::7}"
           yq -i '(.. | select(. == "<IMAGE>")) = strenv(IMAGE)' k8s-manifests/movies-api.yaml
 
-      - name: Deploy NGINX
-        if: steps.cluster.outputs.deploy == 'true'
-        run: |
-            kubectl apply -f k8s-manifests/nginx.yaml
-            kubectl rollout status deployment/nginx --timeout=5m
-
       - name: Deploy movies-api
         if: steps.cluster.outputs.deploy == 'true'
         run: |

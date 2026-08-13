@@ -12,6 +12,8 @@ and easy to tear down.
   on a custom launch template: IMDSv2-only with hop limit 1, encrypted gp3 root
 - **Security:** IRSA (OIDC), KMS secrets encryption, EKS access entries
 - **Add-ons:** CoreDNS, kube-proxy, VPC CNI, EBS CSI driver
+- **Ingress:** ingress-nginx behind one NLB — the cluster's single entry point,
+  installed as a pinned Helm release by Terraform so `destroy` reclaims the LB
 - **State:** S3 remote backend with native lockfile
 - **App delivery:** lint → build → Trivy scan → ECR → `kubectl apply`, on OIDC
 

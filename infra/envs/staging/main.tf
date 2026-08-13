@@ -11,5 +11,22 @@ module "platform" {
 
   cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
 
-  app_deploy_role_arns = var.app_deploy_role_arn == null || var.app_deploy_role_arn == "" ? {} : { app_cd = var.app_deploy_role_arn }
+  app_deploy_role_arns = local.principals.app_cd
+
+  # Terraform manages Helm releases, so both CI identities need Kubernetes-side
+  # access on top of their IAM permissions.
+  cluster_admin_principal_arns  = merge(local.principals.tf_apply, local.principals.local_admin)
+  cluster_viewer_principal_arns = local.principals.tf_plan
+}
+
+locals {
+  # Each is optional: unset in a GitHub Environment, TF_VAR_* arrives as "".
+  principals = {
+    for k, arn in {
+      app_cd      = var.app_deploy_role_arn
+      tf_apply    = var.tf_apply_role_arn
+      tf_plan     = var.tf_plan_role_arn
+      local_admin = var.local_admin_principal_arn
+    } : k => arn == null || arn == "" ? {} : { (k) = arn }
+  }
 }

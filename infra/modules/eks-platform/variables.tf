@@ -143,6 +143,40 @@ variable "app_namespace" {
   default     = "default"
 }
 
+variable "cluster_admin_principal_arns" {
+  description = "Principals granted cluster-admin. Terraform installs Helm releases now, so every identity that runs apply needs one. Never list the identity that CREATED the cluster: enable_cluster_creator_admin_permissions already made an access entry for it and a second one fails with ResourceInUseException. Apply locally, list the CI apply role here; let CI create the cluster, list your own ARN instead."
+  type        = map(string)
+  default     = {}
+}
+
+variable "cluster_viewer_principal_arns" {
+  description = "Principals granted read access including Secrets (AmazonEKSAdminViewPolicy). What a Terraform plan identity needs to refresh Helm release state — releases are stored as Secrets — without handing it write access."
+  type        = map(string)
+  default     = {}
+}
+
+################################################################################
+# Ingress
+################################################################################
+
+variable "enable_ingress_nginx" {
+  description = "Install ingress-nginx and its NLB. Turning it off drops ~$16/month plus LCU charges, at the cost of having no cluster entry point."
+  type        = bool
+  default     = true
+}
+
+variable "ingress_nginx_chart_version" {
+  description = "ingress-nginx Helm chart version. Pinned so an apply never picks up a new controller by surprise; check the chart's supported Kubernetes range against cluster_version before bumping."
+  type        = string
+  default     = "4.15.1"
+}
+
+variable "ingress_nginx_replica_count" {
+  description = "Controller replicas. Two is the minimum that survives a node going away; they spread across AZs."
+  type        = number
+  default     = 2
+}
+
 ################################################################################
 # Node group
 ################################################################################

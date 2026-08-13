@@ -64,4 +64,23 @@ spec:
   ports:
   - port: 80
     targetPort: 8000
-  type: LoadBalancer
+---
+# No host: the NLB's DNS name isn't known until the controller is up, so this
+# serves on whatever name the request arrives with. Add `host:` once there's a
+# Route 53 record pointing at the load balancer.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: movies-api
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: movies-api
+            port:
+              number: 80
