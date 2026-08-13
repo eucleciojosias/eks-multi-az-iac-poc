@@ -1,67 +1,102 @@
-module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+resource "aws_cloudwatch_log_group" "cluster" {
+  name              = "/aws/eks/${local.name}/cluster"
+  retention_in_days = var.cluster_log_retention_days
 
-  cluster_name    = local.name
-  cluster_version = var.cluster_version
+  tags = merge(local.tags, { Name = "/aws/eks/${local.name}/cluster" })
+}
 
-  cluster_endpoint_public_access       = true
-  cluster_endpoint_private_access      = true
-  cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
+resource "aws_eks_cluster" "this" {
+  name     = local.name
+  version  = var.cluster_version
+  role_arn = aws_iam_role.cluster.arn
 
-  enable_cluster_creator_admin_permissions = true
+  enabled_cluster_log_types = var.cluster_enabled_log_types
 
-  access_entries = {
-    for name, arn in var.app_deploy_role_arns : name => {
-      principal_arn = arn
-      policy_associations = {
-        edit = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
-          access_scope = {
-            type       = "namespace"
-            namespaces = [var.app_namespace]
-          }
-        }
-      }
+  access_config {
+    authentication_mode = "API"
+
+    # Applied once, at creation. Changing it later replaces the cluster.
+    bootstrap_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
+  }
+
+  vpc_config {
+    subnet_ids = [for s in aws_subnet.private : s.id]
+
+    # Private access always on so in-VPC traffic never leaves the network; the
+    # public path stays for CI and kubectl, narrowed by CIDR.
+    endpoint_private_access = true
+    endpoint_public_access  = var.cluster_endpoint_public_access
+    public_access_cidrs     = var.cluster_endpoint_public_access_cidrs
+  }
+
+  encryption_config {
+    resources = ["secrets"]
+
+    provider {
+      key_arn = aws_kms_key.eks.arn
     }
   }
 
-  enable_irsa = true
+  tags = local.tags
 
-  cluster_addons = {
-    coredns    = { most_recent = true }
-    kube-proxy = { most_recent = true }
-    vpc-cni    = { most_recent = true }
+  # Terraform can't infer these from attribute references: EKS calls KMS and
+  # CloudWatch as the cluster role while the cluster is being created, so the
+  # permissions have to land first.
+  depends_on = [
+    aws_iam_role_policy_attachment.cluster,
+    aws_iam_role_policy.cluster_encryption,
+    aws_cloudwatch_log_group.cluster,
+  ]
+}
+
+################################################################################
+# IRSA
+################################################################################
+
+locals {
+  # Host portion of the issuer URL — IAM condition keys are built from it.
+  oidc_issuer_host = replace(aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
+}
+
+resource "aws_iam_openid_connect_provider" "this" {
+  url            = aws_eks_cluster.this.identity[0].oidc[0].issuer
+  client_id_list = ["sts.amazonaws.com"]
+
+  # thumbprint_list omitted on purpose: AWS stopped validating thumbprints for
+  # its own OIDC endpoints and supplies one itself. Pinning a value here would
+  # add a hashicorp/tls provider dependency and something that goes stale on the
+  # next CA rotation.
+
+  tags = local.tags
+}
+
+################################################################################
+# Access entries
+################################################################################
+
+# The app CD pipeline gets edit rights in one namespace and nothing else — no
+# cluster-wide role, no aws-auth edit, revocable by deleting the association.
+resource "aws_eks_access_entry" "app_deploy" {
+  for_each = var.app_deploy_role_arns
+
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = each.value
+  type          = "STANDARD"
+
+  tags = local.tags
+}
+
+resource "aws_eks_access_policy_association" "app_deploy" {
+  for_each = var.app_deploy_role_arns
+
+  cluster_name  = aws_eks_cluster.this.name
+  principal_arn = each.value
+  policy_arn    = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+
+  access_scope {
+    type       = "namespace"
+    namespaces = [var.app_namespace]
   }
 
-  create_kms_key            = true
-  cluster_encryption_config = { resources = ["secrets"] }
-
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
-
-  eks_managed_node_group_defaults = {
-    ami_type = "AL2023_x86_64_STANDARD"
-  }
-
-  eks_managed_node_groups = {
-    default = {
-      iam_role_name            = "${local.name}-node"
-      iam_role_use_name_prefix = true
-
-      min_size     = var.node_min_size
-      max_size     = var.node_max_size
-      desired_size = var.node_desired_size
-
-      instance_types = var.node_instance_types
-      capacity_type  = var.node_capacity_type
-
-      disk_size = var.node_disk_size
-    }
-  }
-
-  tags = {
-    Project     = var.project
-    Environment = var.environment
-  }
+  depends_on = [aws_eks_access_entry.app_deploy]
 }

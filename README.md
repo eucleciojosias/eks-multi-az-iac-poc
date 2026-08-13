@@ -6,9 +6,10 @@ and easy to tear down.
 
 ## Stack
 
-- **Terraform** with `terraform-aws-modules/{vpc,eks}`
+- **Terraform** with native `aws_*` resources only — no registry modules
 - **Networking:** multi-AZ VPC, public + private subnets, single NAT gateway
-- **Compute:** EKS managed node group on **spot** instances (private subnets)
+- **Compute:** EKS managed node group on **spot** instances (private subnets),
+  on a custom launch template: IMDSv2-only with hop limit 1, encrypted gp3 root
 - **Security:** IRSA (OIDC), KMS secrets encryption, EKS access entries
 - **Add-ons:** CoreDNS, kube-proxy, VPC CNI, EBS CSI driver
 - **State:** S3 remote backend with native lockfile

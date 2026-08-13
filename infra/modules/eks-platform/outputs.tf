@@ -3,10 +3,14 @@ output "region" {
   value       = data.aws_region.current.name
 }
 
-output "cluster_name" {
-  description = "EKS cluster name (used by `make update-kubeconfig`)."
-  value       = module.eks.cluster_name
+output "azs" {
+  description = "Availability Zones in use."
+  value       = local.azs
 }
+
+################################################################################
+# Network
+################################################################################
 
 output "vpc_id" {
   description = "ID of the VPC."
@@ -23,22 +27,50 @@ output "public_subnet_ids" {
   value       = [for s in aws_subnet.public : s.id]
 }
 
-output "azs" {
-  description = "Availability Zones in use."
-  value       = local.azs
+################################################################################
+# Cluster
+################################################################################
+
+output "cluster_name" {
+  description = "EKS cluster name (used by `make update-kubeconfig`)."
+  value       = aws_eks_cluster.this.name
 }
 
 output "cluster_endpoint" {
   description = "EKS API server endpoint."
-  value       = module.eks.cluster_endpoint
+  value       = aws_eks_cluster.this.endpoint
+}
+
+output "cluster_certificate_authority_data" {
+  description = "Base64 CA bundle for the API server — for building a kubeconfig without calling AWS."
+  value       = aws_eks_cluster.this.certificate_authority[0].data
+}
+
+output "cluster_security_group_id" {
+  description = "EKS-managed cluster security group. Reference it from other security groups instead of opening CIDRs."
+  value       = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
 }
 
 output "cluster_oidc_provider_arn" {
   description = "OIDC provider ARN (used for IRSA)."
-  value       = module.eks.oidc_provider_arn
+  value       = aws_iam_openid_connect_provider.this.arn
 }
+
+output "cluster_oidc_issuer_host" {
+  description = "Issuer host without the scheme — the prefix for IRSA trust-policy condition keys."
+  value       = local.oidc_issuer_host
+}
+
+################################################################################
+# Compute
+################################################################################
 
 output "node_group_names" {
   description = "Managed node group name(s)."
-  value       = keys(module.eks.eks_managed_node_groups)
+  value       = [aws_eks_node_group.default.node_group_name]
+}
+
+output "node_iam_role_arn" {
+  description = "IAM role the nodes assume — the principal to grant when a workload uses the node role instead of IRSA."
+  value       = aws_iam_role.node.arn
 }

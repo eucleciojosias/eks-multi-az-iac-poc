@@ -66,15 +66,102 @@ variable "single_nat_gateway" {
 ################################################################################
 
 variable "cluster_version" {
-  description = "EKS control-plane version"
+  description = "EKS control-plane version."
   type        = string
   default     = "1.33"
+
+  validation {
+    condition     = can(regex("^1\\.[0-9]{2}$", var.cluster_version))
+    error_message = "cluster_version must be a minor version such as \"1.33\", never a patch version."
+  }
+}
+
+variable "cluster_endpoint_public_access" {
+  description = "Expose the Kubernetes API on a public endpoint, restricted to cluster_endpoint_public_access_cidrs. The private endpoint is always on."
+  type        = bool
+  default     = true
+}
+
+variable "cluster_endpoint_public_access_cidrs" {
+  description = "CIDRs allowed to reach the public API endpoint."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = alltrue([for c in var.cluster_endpoint_public_access_cidrs : can(cidrhost(c, 0))])
+    error_message = "every entry must be a valid CIDR, e.g. [\"203.0.113.4/32\"]."
+  }
+}
+
+variable "cluster_enabled_log_types" {
+  description = "Control-plane log types shipped to CloudWatch."
+  type        = list(string)
+  default     = ["api", "audit", "authenticator"]
+
+  validation {
+    condition     = alltrue([for t in var.cluster_enabled_log_types : contains(["api", "audit", "authenticator", "controllerManager", "scheduler"], t)])
+    error_message = "valid log types are api, audit, authenticator, controllerManager, scheduler."
+  }
+}
+
+variable "cluster_log_retention_days" {
+  description = "Retention for /aws/eks/<cluster>/cluster. The log group is created here rather than by EKS so this is not \"never expire\"."
+  type        = number
+  default     = 90
+}
+
+variable "kms_key_deletion_window_in_days" {
+  description = "Waiting period before the secrets-encryption key is destroyed. Deleting the key makes every encrypted Secret unreadable, so leave headroom."
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.kms_key_deletion_window_in_days >= 7 && var.kms_key_deletion_window_in_days <= 30
+    error_message = "kms_key_deletion_window_in_days must be between 7 and 30."
+  }
+}
+
+variable "enable_cluster_creator_admin_permissions" {
+  description = "Give the applying principal a cluster-admin access entry."
+  type        = bool
+  default     = true
+}
+
+################################################################################
+# Access
+################################################################################
+
+variable "app_deploy_role_arns" {
+  description = "IAM roles the app CD pipeline (app-ci.yml) assumes. Each gets an access entry scoped to app_namespace."
+  type        = map(string)
+  default     = {}
+}
+
+variable "app_namespace" {
+  description = "Namespace the app CD pipeline may edit."
+  type        = string
+  default     = "default"
+}
+
+################################################################################
+# Node group
+################################################################################
+
+variable "node_ami_type" {
+  description = "Managed node group AMI family."
+  type        = string
+  default     = "AL2023_x86_64_STANDARD"
 }
 
 variable "node_instance_types" {
-  description = "Instance types for the managed node group."
+  description = "Instance types for the managed node group. With SPOT, list several so the group has more than one capacity pool to fall back on."
   type        = list(string)
   default     = ["t3.micro"]
+
+  validation {
+    condition     = length(var.node_instance_types) > 0
+    error_message = "node_instance_types must not be empty."
+  }
 }
 
 variable "node_capacity_type" {
@@ -104,28 +191,42 @@ variable "node_max_size" {
   description = "Maximum nodes in the managed node group."
   type        = number
   default     = 2
+
+  validation {
+    condition     = var.node_min_size <= var.node_desired_size && var.node_desired_size <= var.node_max_size
+    error_message = "node sizes must satisfy min <= desired <= max."
+  }
 }
 
 variable "node_disk_size" {
-  description = "EBS root volume size (GiB) per node."
+  description = "EBS root volume size (GiB) per node. Applied through the launch template's block_device_mappings, not the node group."
   type        = number
   default     = 20
+
+  validation {
+    condition     = var.node_disk_size >= 20
+    error_message = "node_disk_size must be at least 20 GiB to hold the AMI plus images."
+  }
 }
 
-variable "app_deploy_role_arns" {
-  description = "IAM roles the app CD pipeline (app-ci.yml) assumes."
-  type        = map(string)
-  default     = {}
-}
-
-variable "app_namespace" {
-  description = "Namespace the app CD pipeline may edit."
+variable "node_volume_type" {
+  description = "EBS root volume type per node. gp3 gives gp2's baseline IOPS for less money and lets throughput be raised without growing the volume."
   type        = string
-  default     = "default"
+  default     = "gp3"
+
+  validation {
+    condition     = contains(["gp3", "gp2"], var.node_volume_type)
+    error_message = "node_volume_type must be gp3 or gp2."
+  }
 }
 
-variable "cluster_endpoint_public_access_cidrs" {
-  description = "CIDRs allowed to reach the public API endpoint."
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
+variable "node_imds_hop_limit" {
+  description = "IMDSv2 PUT response hop limit. 1 keeps the node role's credentials out of pods on the pod network; raise to 2 only for a workload that genuinely reads IMDS from inside a container."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.node_imds_hop_limit >= 1 && var.node_imds_hop_limit <= 2
+    error_message = "node_imds_hop_limit must be 1 or 2."
+  }
 }
