@@ -10,17 +10,17 @@ output "cluster_name" {
 
 output "vpc_id" {
   description = "ID of the VPC."
-  value       = module.vpc.vpc_id
+  value       = aws_vpc.this.id
 }
 
 output "private_subnet_ids" {
   description = "Private subnet IDs (EKS nodes live here)."
-  value       = module.vpc.private_subnets
+  value       = [for s in aws_subnet.private : s.id]
 }
 
 output "public_subnet_ids" {
   description = "Public subnet IDs (load balancers, NAT)."
-  value       = module.vpc.public_subnets
+  value       = [for s in aws_subnet.public : s.id]
 }
 
 output "azs" {
