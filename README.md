@@ -14,6 +14,7 @@ and easy to tear down.
 - **Add-ons:** CoreDNS, kube-proxy, VPC CNI, EBS CSI driver
 - **Ingress:** ingress-nginx behind one NLB — the cluster's single entry point,
   installed as a pinned Helm release by Terraform so `destroy` reclaims the LB
+- **DNS:** `app.staging.euclecio.site`, a Route 53 alias to the NLB the controller creates
 - **State:** S3 remote backend with native lockfile
 - **App delivery:** lint → build → Trivy scan → ECR → `kubectl apply`, on OIDC
 

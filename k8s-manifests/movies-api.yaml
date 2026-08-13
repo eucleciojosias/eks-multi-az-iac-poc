@@ -65,9 +65,6 @@ spec:
   - port: 80
     targetPort: 8000
 ---
-# No host: the NLB's DNS name isn't known until the controller is up, so this
-# serves on whatever name the request arrives with. Add `host:` once there's a
-# Route 53 record pointing at the load balancer.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -75,7 +72,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: app.staging.euclecio.site
+    http:
       paths:
       - path: /
         pathType: Prefix

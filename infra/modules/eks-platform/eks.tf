@@ -22,8 +22,6 @@ resource "aws_eks_cluster" "this" {
   vpc_config {
     subnet_ids = [for s in aws_subnet.private : s.id]
 
-    # Private access always on so in-VPC traffic never leaves the network; the
-    # public path stays for CI and kubectl, narrowed by CIDR.
     endpoint_private_access = true
     endpoint_public_access  = var.cluster_endpoint_public_access
     public_access_cidrs     = var.cluster_endpoint_public_access_cidrs
@@ -39,9 +37,6 @@ resource "aws_eks_cluster" "this" {
 
   tags = local.tags
 
-  # Terraform can't infer these from attribute references: EKS calls KMS and
-  # CloudWatch as the cluster role while the cluster is being created, so the
-  # permissions have to land first.
   depends_on = [
     aws_iam_role_policy_attachment.cluster,
     aws_iam_role_policy.cluster_encryption,
@@ -54,18 +49,12 @@ resource "aws_eks_cluster" "this" {
 ################################################################################
 
 locals {
-  # Host portion of the issuer URL — IAM condition keys are built from it.
   oidc_issuer_host = replace(aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
 }
 
 resource "aws_iam_openid_connect_provider" "this" {
   url            = aws_eks_cluster.this.identity[0].oidc[0].issuer
   client_id_list = ["sts.amazonaws.com"]
-
-  # thumbprint_list omitted on purpose: AWS stopped validating thumbprints for
-  # its own OIDC endpoints and supplies one itself. Pinning a value here would
-  # add a hashicorp/tls provider dependency and something that goes stale on the
-  # next CA rotation.
 
   tags = local.tags
 }
@@ -74,8 +63,6 @@ resource "aws_iam_openid_connect_provider" "this" {
 # Access entries
 ################################################################################
 
-# The app CD pipeline gets edit rights in one namespace and nothing else — no
-# cluster-wide role, no aws-auth edit, revocable by deleting the association.
 resource "aws_eks_access_entry" "app_deploy" {
   for_each = var.app_deploy_role_arns
 
@@ -87,16 +74,16 @@ resource "aws_eks_access_entry" "app_deploy" {
 }
 
 locals {
-  # Same shape for both tiers, so the entry and the association can each be one
-  # resource instead of two.
   cluster_access = merge(
     { for k, arn in var.cluster_admin_principal_arns : k => {
       principal_arn = arn
       policy        = "AmazonEKSClusterAdminPolicy"
+      namespaces    = []
     } },
     { for k, arn in var.cluster_viewer_principal_arns : k => {
       principal_arn = arn
       policy        = "AmazonEKSAdminViewPolicy"
+      namespaces    = var.cluster_viewer_namespaces
     } },
   )
 }
@@ -119,7 +106,8 @@ resource "aws_eks_access_policy_association" "cluster_access" {
   policy_arn    = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/${each.value.policy}"
 
   access_scope {
-    type = "cluster"
+    type       = length(each.value.namespaces) > 0 ? "namespace" : "cluster"
+    namespaces = length(each.value.namespaces) > 0 ? each.value.namespaces : null
   }
 
   depends_on = [aws_eks_access_entry.cluster_access]

@@ -20,10 +20,21 @@ resource "helm_release" "ingress_nginx" {
       replicaCount = var.ingress_nginx_replica_count
 
       service = {
-        annotations = {
-          "service.beta.kubernetes.io/aws-load-balancer-type"                              = "nlb"
-          "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
-        }
+        type = "LoadBalancer"
+
+        annotations = merge(
+          {
+            "service.beta.kubernetes.io/aws-load-balancer-type"                              = "nlb"
+            "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
+          },
+          local.create_ingress_record ? {
+            "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"         = aws_acm_certificate_validation.ingress[0].certificate_arn
+            "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"        = "https"
+            "service.beta.kubernetes.io/aws-load-balancer-backend-protocol" = "tcp"
+          } : {},
+        )
+
+        targetPorts = local.create_ingress_record ? { https = "http" } : {}
       }
 
       ingressClassResource = {
@@ -57,5 +68,6 @@ resource "helm_release" "ingress_nginx" {
     aws_eks_node_group.default,
     aws_eks_addon.core,
     aws_eks_access_policy_association.cluster_access,
+    aws_acm_certificate_validation.ingress,
   ]
 }

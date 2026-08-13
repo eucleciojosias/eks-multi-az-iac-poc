@@ -155,18 +155,24 @@ variable "cluster_viewer_principal_arns" {
   default     = {}
 }
 
+variable "cluster_viewer_namespaces" {
+  description = "Namespaces the viewer principals may read. Defaults to where Helm keeps its release Secrets; an empty list widens the grant to the whole cluster, which means every Secret in it."
+  type        = list(string)
+  default     = ["ingress-nginx"]
+}
+
 ################################################################################
 # Ingress
 ################################################################################
 
 variable "enable_ingress_nginx" {
-  description = "Install ingress-nginx and its NLB. Turning it off drops ~$16/month plus LCU charges, at the cost of having no cluster entry point."
+  description = "Install ingress-nginx and its NLB."
   type        = bool
   default     = true
 }
 
 variable "ingress_nginx_chart_version" {
-  description = "ingress-nginx Helm chart version. Pinned so an apply never picks up a new controller by surprise; check the chart's supported Kubernetes range against cluster_version before bumping."
+  description = "ingress-nginx Helm chart version. "
   type        = string
   default     = "4.15.1"
 }
@@ -175,6 +181,18 @@ variable "ingress_nginx_replica_count" {
   description = "Controller replicas. Two is the minimum that survives a node going away; they spread across AZs."
   type        = number
   default     = 2
+}
+
+variable "ingress_hostname" {
+  description = "FQDN pointed at the ingress NLB, e.g. app.example.com. Empty means no Route 53 record — the NLB's own DNS name is then the only way in."
+  type        = string
+  default     = ""
+}
+
+variable "route53_zone_name" {
+  description = "Public hosted zone that owns ingress_hostname."
+  type        = string
+  default     = "euclecio.site"
 }
 
 ################################################################################

@@ -9,12 +9,12 @@ module "platform" {
   node_instance_types = ["t3.small"]
   node_desired_size   = 2
 
+  ingress_hostname = "app.staging.euclecio.site"
+
   cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
 
   app_deploy_role_arns = local.principals.app_cd
 
-  # Terraform manages Helm releases, so both CI identities need Kubernetes-side
-  # access on top of their IAM permissions.
   cluster_admin_principal_arns  = merge(local.principals.tf_apply, local.principals.local_admin)
   cluster_viewer_principal_arns = local.principals.tf_plan
 }
