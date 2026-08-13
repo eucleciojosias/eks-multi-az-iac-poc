@@ -4,6 +4,7 @@ module "platform" {
   project     = "eks-multi-az-iac-poc"
   environment = "staging"
 
+  node_ami_type       = "AL2023_x86_64_STANDARD"
   node_capacity_type  = "SPOT"
   node_instance_types = ["t3.small"]
   node_desired_size   = 2
