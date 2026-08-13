@@ -8,13 +8,10 @@ and easy to tear down.
 
 - **Terraform** with native `aws_*` resources only — no registry modules
 - **Networking:** multi-AZ VPC, public + private subnets, single NAT gateway
-- **Compute:** EKS managed node group on **spot** instances (private subnets),
-  on a custom launch template: IMDSv2-only with hop limit 1, encrypted gp3 root
+- **Compute:** EKS managed node group on **spot** instances (private subnets), on a custom launch template.
 - **Security:** IRSA (OIDC), KMS secrets encryption, EKS access entries
 - **Add-ons:** CoreDNS, kube-proxy, VPC CNI, EBS CSI driver
-- **Ingress:** ingress-nginx behind one NLB — the cluster's single entry point,
-  installed as a pinned Helm release by Terraform so `destroy` reclaims the LB
-- **DNS:** `app.staging.euclecio.site`, a Route 53 alias to the NLB the controller creates
+- **Ingress:** ingress-nginx behind one NLB — the cluster's single entry point
 - **State:** S3 remote backend with native lockfile
 - **App delivery:** lint → build → Trivy scan → ECR → `kubectl apply`, on OIDC
 
@@ -26,7 +23,7 @@ instantiates it with its own values and its own isolated state. Adding
 
 ```
 api/                        # FastAPI app + Dockerfile — the deployed workload
-k8s/                        # Deployment + Service manifests (<IMAGE> filled by CI)
+k8s-manifests/              # Deployment + Service manifests (<IMAGE> filled by CI)
 infra/
 ├── Makefile                # targets take ENV=<name>
 ├── modules/eks-platform/   # the reusable composite: VPC + EKS + add-ons
