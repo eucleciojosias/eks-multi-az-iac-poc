@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "app" {
-  for_each = toset(["movies-py-api"])
+  for_each = toset(["movies-py-api", "questions-gen-vue"])
 
   name = each.value
 
