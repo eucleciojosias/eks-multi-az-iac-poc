@@ -13,7 +13,6 @@ and easy to tear down.
 - **Add-ons:** CoreDNS, kube-proxy, VPC CNI, EBS CSI driver
 - **Ingress:** ingress-nginx behind one NLB — the cluster's single entry point
 - **State:** S3 remote backend with native lockfile
-- **App delivery:** lint → build → Trivy scan → ECR → `kubectl apply`, on OIDC
 
 ## Layout
 
@@ -22,8 +21,6 @@ instantiates it with its own values and its own isolated state. Adding
 `production` is a folder copy, not a code change.
 
 ```
-api/                        # FastAPI app + Dockerfile — the deployed workload
-k8s-manifests/              # Deployment + Service manifests (<IMAGE> filled by CI)
 infra/
 ├── Makefile                # targets take ENV=<name>
 ├── modules/eks-platform/   # the reusable composite: VPC + EKS + add-ons
@@ -37,7 +34,6 @@ infra/iam/                  # provisioner + CI role policies (templated)
 ├── workflows/iac-ci.yml    # orchestration only
 ├── workflows/tf-plan.yml   # reusable: lint/validate/plan one env
 ├── workflows/tf-cost.yml   # reusable: infracost diff for one env
-├── workflows/app-ci.yml    # app: lint, build, scan, push to ECR, deploy
 ├── actions/tf-setup/       # terraform + tflint + OIDC preamble
 └── scripts/affected-envs.sh # which envs a change actually touches
 .tflint.hcl                 # lint rules, shared by every env
