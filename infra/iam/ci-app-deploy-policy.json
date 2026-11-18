@@ -21,7 +21,10 @@
         "ecr:PutImage",
         "ecr:UploadLayerPart"
       ],
-      "Resource": "arn:aws:ecr:*:<ACCOUNT_ID>:repository/movies-py-api"
+      "Resource": [
+        "arn:aws:ecr:*:<ACCOUNT_ID>:repository/movies-py-api",
+        "arn:aws:ecr:*:<ACCOUNT_ID>:repository/questions-gen-vue"
+      ]
     },
     {
       "Sid": "DescribeClusterForKubeconfig",
