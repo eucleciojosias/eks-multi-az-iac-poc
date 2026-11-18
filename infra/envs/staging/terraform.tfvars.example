@@ -4,6 +4,12 @@
 #   cp terraform.tfvars.example terraform.tfvars
 #
 # Find your current public IP:  curl -s https://checkip.amazonaws.com
-# CI does not use this file — it injects TF_VAR_* from the GitHub Environment.
+# CI does not use this file — it injects TF_VAR_* from GitHub repo variables.
 
 cluster_endpoint_public_access_cidrs = ["203.0.113.4/32"] # <- your IP/32
+
+# Set all three for a local apply too. An unset role ARN means "no access
+# entry", so a local apply without them deletes the CI roles' cluster access.
+app_deploy_role_arn = "arn:aws:iam::<ACCOUNT_ID>:role/github-actions-app-deploy"
+tf_apply_role_arn   = "arn:aws:iam::<ACCOUNT_ID>:role/github-actions-eks-apply"
+tf_plan_role_arn    = "arn:aws:iam::<ACCOUNT_ID>:role/github-actions-eks-plan"

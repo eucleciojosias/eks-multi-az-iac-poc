@@ -132,15 +132,19 @@ variable "enable_cluster_creator_admin_permissions" {
 ################################################################################
 
 variable "app_deploy_role_arns" {
-  description = "IAM roles the app CD pipeline (app-ci.yml) assumes. Each gets an access entry scoped to app_namespace."
+  description = "IAM roles the app CD pipeline (app-ci.yml) assumes. Each gets an access entry scoped to app_namespaces."
   type        = map(string)
   default     = {}
 }
 
-variable "app_namespace" {
-  description = "Namespace the app CD pipeline may edit."
-  type        = string
-  default     = "default"
+variable "app_namespaces" {
+  description = "Namespaces Terraform creates for apps, one per app repo. The app CD pipeline may edit only these."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.app_namespaces) > 0
+    error_message = "app_namespaces needs at least one namespace: an access scope of type namespace can't be empty."
+  }
 }
 
 variable "cluster_admin_principal_arns" {

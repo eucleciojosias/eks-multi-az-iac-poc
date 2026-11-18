@@ -14,6 +14,7 @@ module "platform" {
   cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
 
   app_deploy_role_arns = local.principals.app_cd
+  app_namespaces       = ["movies-api", "interviewer-gen"]
 
   cluster_admin_principal_arns  = merge(local.principals.tf_apply, local.principals.local_admin)
   cluster_viewer_principal_arns = local.principals.tf_plan

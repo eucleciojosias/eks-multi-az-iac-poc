@@ -122,7 +122,7 @@ resource "aws_eks_access_policy_association" "app_deploy" {
 
   access_scope {
     type       = "namespace"
-    namespaces = [var.app_namespace]
+    namespaces = var.app_namespaces
   }
 
   depends_on = [aws_eks_access_entry.app_deploy]
