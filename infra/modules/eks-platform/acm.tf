@@ -8,7 +8,8 @@ resource "aws_acm_certificate" "ingress" {
   domain_name       = var.ingress_hostname
   validation_method = "DNS"
 
-  tags = merge(local.tags, { Name = var.ingress_hostname })
+  # Tag values can't contain `*`, so a wildcard hostname is spelled out.
+  tags = merge(local.tags, { Name = replace(var.ingress_hostname, "*", "wildcard") })
 
   lifecycle {
     create_before_destroy = true
