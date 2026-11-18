@@ -188,7 +188,7 @@ variable "ingress_nginx_replica_count" {
 }
 
 variable "ingress_hostname" {
-  description = "FQDN pointed at the ingress NLB, e.g. app.example.com. Empty means no Route 53 record — the NLB's own DNS name is then the only way in."
+  description = "FQDN pointed at the ingress NLB, e.g. app.example.com, or a wildcard like *.staging.example.com so every app subdomain resolves and serves valid TLS with no per-app DNS or cert change. Empty means no Route 53 record — the NLB's own DNS name is then the only way in."
   type        = string
   default     = ""
 }

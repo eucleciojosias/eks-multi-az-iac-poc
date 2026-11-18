@@ -74,11 +74,6 @@ output "node_group_names" {
 # Ingress
 ################################################################################
 
-output "ingress_url" {
-  description = "Where the cluster answers. Without a hostname, read the NLB name from `kubectl -n ingress-nginx get svc ingress-nginx-controller`."
-  value       = local.create_ingress_record ? "https://${var.ingress_hostname}" : null
-}
-
 output "ingress_nlb_dns_name" {
   description = "DNS name of the NLB the cloud controller created for the ingress Service."
   value       = local.create_ingress_record ? data.aws_lb.ingress[0].dns_name : null

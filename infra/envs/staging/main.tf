@@ -9,7 +9,7 @@ module "platform" {
   node_instance_types = ["t3.small"]
   node_desired_size   = 2
 
-  ingress_hostname = "app.staging.euclecio.site"
+  ingress_hostname = "*.staging.euclecio.site" # wildcard cert + DNS: each app picks its own subdomain in its Ingress
 
   cluster_endpoint_public_access_cidrs = var.cluster_endpoint_public_access_cidrs
 
