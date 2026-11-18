@@ -3,7 +3,7 @@
 ################################################################################
 
 data "aws_eks_addon_version" "core" {
-  for_each = toset(["coredns", "kube-proxy", "vpc-cni"])
+  for_each = toset(["coredns", "kube-proxy", "vpc-cni", "metrics-server"])
 
   addon_name         = each.key
   kubernetes_version = aws_eks_cluster.this.version
